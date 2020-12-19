@@ -42,7 +42,7 @@ impl std::fmt::Display for Rating {
             8 => "★★★★",
             9 => "★★★★½",
             10 => "★★★★★",
-            _ => "no rating"
+            _ => "no rating",
         };
         f.write_fmt(format_args!("{}", star))
     }
@@ -92,14 +92,14 @@ impl LetterboxdClient {
     fn get_pages(&self, html: &Html) -> Result<usize> {
         let pagination_sel = Selector::parse("div.pagination").unwrap();
         let li_sel = Selector::parse("li.paginate-page > a").unwrap();
-        let page = html
-            .select(&pagination_sel)
-            .next()
-            .unwrap()
-            .select(&li_sel)
-            .last()
-            .unwrap();
-        Ok(page.inner_html().parse()?)
+        let page = match html.select(&pagination_sel).next() {
+            Some(p) => p,
+            // couldn't find the pagination thingy, must mean that only 1 page?
+            None => return Ok(1),
+        };
+
+        let no_pages = page.select(&li_sel).last().unwrap();
+        Ok(no_pages.inner_html().parse()?)
     }
 
     fn film_from_elem_ref(&self, movie: &scraper::ElementRef) -> Result<Film> {
@@ -138,7 +138,11 @@ impl LetterboxdClient {
     }
 
     #[tracing::instrument(skip(self))]
-    async fn get_letterboxd_film_by_page(&self, username: &str, page: usize) -> Result<reqwest::Response> {
+    async fn get_letterboxd_film_by_page(
+        &self,
+        username: &str,
+        page: usize,
+    ) -> Result<reqwest::Response> {
         let url = format!("https://letterboxd.com/{}/films/page/{}", username, page);
         debug!("fetching url={}", url);
         let text = self.client.get(&url).send().await?;
