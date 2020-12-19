@@ -73,6 +73,11 @@ async fn get_diff(user1: &str, user2: &str) -> Result<String> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
+    let port = std::env::var("PORT")
+        .ok()
+        .and_then(|port| port.parse().ok())
+        .unwrap_or_else(|| 3030);
+
     let hello =
         warp::path!(String / "vs" / String).and_then(async move |user1: String, user2: String| {
             match get_diff(&user1, &user2).await {
@@ -86,7 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let routes = hello.or(index);
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], port)).await;
 
     Ok(())
 }
