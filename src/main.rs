@@ -9,12 +9,15 @@ use crate::cache::*;
 use crate::letterboxd::*;
 use anyhow::Result;
 use askama::Template;
-use std::collections::HashSet;
-use warp::Filter;
-use tracing::{info, debug};
-use tracing_subscriber;
 use std::cmp::Ordering;
+use std::collections::HashSet;
+use tracing::{debug, info};
+use tracing_subscriber;
+use warp::Filter;
 
+#[derive(Template)]
+#[template(path = "index.html")]
+struct IndexTemplate {}
 
 #[derive(Template)]
 #[template(path = "diff.html")]
@@ -51,13 +54,11 @@ async fn get_diff(user1: &str, user2: &str) -> Result<String> {
         .into_iter()
         .filter(|x| !watched_by_2.contains(&x.id))
         .collect();
-    diff.sort_by(|a, b| {
-        match (a.rating, b.rating) {
-            (Some(r1), Some(r2)) => r2.partial_cmp(&r1).unwrap(),
-            (None, Some(_)) => Ordering::Greater,
-            (Some(_), None) => Ordering::Less,
-            (None, None) => Ordering::Equal,
-        }
+    diff.sort_by(|a, b| match (a.rating, b.rating) {
+        (Some(r1), Some(r2)) => r2.partial_cmp(&r1).unwrap(),
+        (None, Some(_)) => Ordering::Greater,
+        (Some(_), None) => Ordering::Less,
+        (None, None) => Ordering::Equal,
     });
     Ok(DiffTemplate {
         user1: &user1,
@@ -78,12 +79,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(s) => Ok(warp::reply::html(s)),
                 Err(_) => return Err(warp::reject::not_found()),
             }
-            // Ok(warp::reply::html(
-            //     // get_diff(&user1, &user2).await.unwrap_or_else(|err| err.to_string()),
-            // ))
         });
+    let index = warp::path::end().map(|| -> warp::reply::Html<String> {
+        return warp::reply::html(IndexTemplate {}.render().unwrap().into());
+    });
 
-    warp::serve(hello).run(([127, 0, 0, 1], 3030)).await;
+    let routes = hello.or(index);
+
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 
     Ok(())
 }

@@ -10,6 +10,9 @@ use thiserror::Error;
 pub enum LetterboxdError {
     #[error("missing attr {0}")]
     HtmlMissingAttr(String),
+
+    #[error("user not found {0}")]
+    UserNotFound(String),
 }
 
 pub struct LetterboxdClient {
@@ -135,10 +138,10 @@ impl LetterboxdClient {
     }
 
     #[tracing::instrument(skip(self))]
-    async fn get_letterboxd_film_by_page(&self, username: &str, page: usize) -> Result<String> {
+    async fn get_letterboxd_film_by_page(&self, username: &str, page: usize) -> Result<reqwest::Response> {
         let url = format!("https://letterboxd.com/{}/films/page/{}", username, page);
         debug!("fetching url={}", url);
-        let text = self.client.get(&url).send().await?.text().await?;
+        let text = self.client.get(&url).send().await?;
         Ok(text)
     }
 
@@ -149,7 +152,11 @@ impl LetterboxdClient {
         // let no_of_pages = self.get_pages(&document)?;
         // TODO: this is weird async problem
         let no_of_pages = {
-            let text = self.get_letterboxd_film_by_page(username, 1).await?;
+            let resp = self.get_letterboxd_film_by_page(username, 1).await?;
+            if resp.status() == reqwest::StatusCode::NOT_FOUND {
+                return Err(LetterboxdError::UserNotFound(username.into()).into());
+            }
+            let text = resp.text().await?;
             let document = Html::parse_document(&text);
             self.get_pages(&document)
         }?;
@@ -165,6 +172,8 @@ impl LetterboxdClient {
             // get the next
             let text = self
                 .get_letterboxd_film_by_page(username, curr_page)
+                .await?
+                .text()
                 .await?;
             let document = Html::parse_document(&text);
             for movie in document.select(&selector) {
