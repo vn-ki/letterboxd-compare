@@ -3,7 +3,6 @@ use std::io::prelude::*;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
-
 /// Simple file backed cache
 pub struct FileCache {}
 
@@ -12,9 +11,9 @@ impl FileCache {
 
     pub fn new() -> Result<Self, std::io::Error> {
         match create_dir(Self::CACHE_DIR) {
-            Ok(()) => {},
-            Err(e) if e.kind() == ErrorKind::AlreadyExists => {},
-            Err(e) => return Err(e)
+            Ok(()) => {}
+            Err(e) if e.kind() == ErrorKind::AlreadyExists => {}
+            Err(e) => return Err(e),
         }
         Ok(FileCache {})
     }

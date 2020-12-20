@@ -54,12 +54,8 @@ async fn get_diff(user1: &str, user2: &str) -> Result<String> {
         .into_iter()
         .filter(|x| !watched_by_2.contains(&x.id))
         .collect();
-    diff.sort_by(|a, b| match (a.rating, b.rating) {
-        (Some(r1), Some(r2)) => r2.partial_cmp(&r1).unwrap(),
-        (None, Some(_)) => Ordering::Greater,
-        (Some(_), None) => Ordering::Less,
-        (None, None) => Ordering::Equal,
-    });
+    diff.sort_by(|a, b| a.rating.partial_cmp(&b.rating).unwrap().reverse());
+
     Ok(DiffTemplate {
         user1: &user1,
         user2: &user2,

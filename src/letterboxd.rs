@@ -30,7 +30,6 @@ impl std::fmt::Debug for Rating {
 
 impl std::fmt::Display for Rating {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        // f.write_fmt(format_args!("{}", (self.0 as f64) / 2.0));
         let star = match self.0 {
             1 => "½",
             2 => "★",
