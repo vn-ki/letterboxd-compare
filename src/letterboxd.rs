@@ -3,6 +3,9 @@ use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 use tracing::debug;
+use futures::{stream, StreamExt};
+use futures::TryStreamExt;
+
 
 use thiserror::Error;
 
@@ -148,6 +151,18 @@ impl LetterboxdClient {
         Ok(text)
     }
 
+    pub async fn get_movies_from_page(&self, username: &str, page: usize) -> Result<Vec<Film>> {
+        let text = self
+            .get_letterboxd_film_by_page(username, page)
+            .await?
+            .text()
+            .await?;
+        let document = Html::parse_document(&text);
+        let selector = Selector::parse("li.poster-container").unwrap();
+
+        document.select(&selector).map(|movie| self.film_from_elem_ref(&movie)).collect()
+    }
+
     #[tracing::instrument(skip(self))]
     pub async fn get_movies_of_user(&self, username: &str) -> Result<Vec<Film>> {
         // let text = self.get_letterboxd_film_by_page(username, 1).await?;
@@ -165,28 +180,14 @@ impl LetterboxdClient {
         }?;
         debug!(no_of_pages = no_of_pages);
 
-        let selector = Selector::parse("li.poster-container").unwrap();
+        let films: Vec<Film> = tokio::stream::iter(1..=no_of_pages)
+            .map(|i| self.get_movies_from_page(username, i))
+            .buffer_unordered(5)
+            .map(|result| result.map(|vec| tokio::stream::iter(vec).map(|item| Result::<_>::Ok(item))))
+            .try_flatten()
+            .try_collect()
+            .await?;
 
-        let mut curr_page = 1;
-        let mut films: Vec<Film> = Vec::with_capacity(no_of_pages * 12 * 6);
-
-        // TODO: for future, can be async. use a channel
-        loop {
-            // get the next
-            let text = self
-                .get_letterboxd_film_by_page(username, curr_page)
-                .await?
-                .text()
-                .await?;
-            let document = Html::parse_document(&text);
-            for movie in document.select(&selector) {
-                films.push(self.film_from_elem_ref(&movie)?);
-            }
-            curr_page += 1;
-            if curr_page > no_of_pages {
-                break;
-            }
-        }
         debug!(films_len = films.len());
         Ok(films)
     }

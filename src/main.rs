@@ -14,6 +14,7 @@ use std::collections::HashSet;
 use tracing::{debug, info};
 use tracing_subscriber;
 use warp::Filter;
+use tokio::try_join;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -45,8 +46,7 @@ async fn cached_get_movies(username: &str) -> Result<Vec<Film>> {
 
 async fn get_diff(user1: &str, user2: &str) -> Result<String> {
     info!("get_diff({}, {})", user1, user2);
-    let movies1 = cached_get_movies(user1).await?;
-    let movies2 = cached_get_movies(user2).await?;
+    let (movies1, movies2) = try_join!(cached_get_movies(user1), cached_get_movies(user2))?;
 
     let watched_by_2: HashSet<_> = movies2.into_iter().map(|x| x.id).collect();
 
