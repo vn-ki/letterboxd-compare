@@ -11,14 +11,16 @@ use anyhow::Result;
 use askama::Template;
 use std::cmp::Ordering;
 use std::collections::HashSet;
+use tokio::try_join;
 use tracing::{debug, info};
 use tracing_subscriber;
 use warp::Filter;
-use tokio::try_join;
 
 #[derive(Template)]
 #[template(path = "index.html")]
-struct IndexTemplate {}
+struct IndexTemplate<'a> {
+    error_mess: Option<&'a str>,
+}
 
 #[derive(Template)]
 #[template(path = "diff.html")]
@@ -74,15 +76,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and_then(|port| port.parse().ok())
         .unwrap_or_else(|| 3030);
 
-    let hello =
-        warp::path!(String / "vs" / String).and_then(async move |user1: String, user2: String| {
+    let hello = warp::path!(String / "vs" / String).and_then(
+        async move |user1: String,
+                    user2: String|
+                    -> Result<warp::reply::Html<String>, warp::reject::Rejection> {
             match get_diff(&user1, &user2).await {
                 Ok(s) => Ok(warp::reply::html(s)),
-                Err(_) => return Err(warp::reject::not_found()),
+                Err(err) => {
+                    debug!("{:?}", &err);
+                    Ok(warp::reply::html(
+                        IndexTemplate {
+                            error_mess: Some(&err.to_string()),
+                        }
+                        .render()
+                        .unwrap()
+                        .into(),
+                    ))
+                }
             }
-        });
+        },
+    );
     let index = warp::path::end().map(|| -> warp::reply::Html<String> {
-        return warp::reply::html(IndexTemplate {}.render().unwrap().into());
+        return warp::reply::html(IndexTemplate { error_mess: None }.render().unwrap().into());
     });
 
     let routes = hello.or(index);

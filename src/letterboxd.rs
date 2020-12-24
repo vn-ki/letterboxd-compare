@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
-use tracing::debug;
+use tracing::{debug, info};
 use futures::{stream, StreamExt};
 use futures::TryStreamExt;
 
@@ -16,6 +16,12 @@ pub enum LetterboxdError {
 
     #[error("user not found {0}")]
     UserNotFound(String),
+
+    #[error("Error while getting the number of pages")]
+    PaginationElementNotFound,
+
+    #[error("parsing failed: {0:?}")]
+    ParseError(#[from] std::num::ParseIntError),
 }
 
 pub struct LetterboxdClient {
@@ -91,7 +97,7 @@ impl LetterboxdClient {
         .into())
     }
 
-    fn get_pages(&self, html: &Html) -> Result<usize> {
+    fn get_pages(&self, html: &Html) -> std::result::Result<usize, LetterboxdError> {
         let pagination_sel = Selector::parse("div.pagination").unwrap();
         let li_sel = Selector::parse("li.paginate-page > a").unwrap();
         let page = match html.select(&pagination_sel).next() {
@@ -100,7 +106,7 @@ impl LetterboxdClient {
             None => return Ok(1),
         };
 
-        let no_pages = page.select(&li_sel).last().unwrap();
+        let no_pages = page.select(&li_sel).last().ok_or(LetterboxdError::PaginationElementNotFound)?;
         Ok(no_pages.inner_html().parse()?)
     }
 
@@ -178,17 +184,15 @@ impl LetterboxdClient {
             let document = Html::parse_document(&text);
             self.get_pages(&document)
         }?;
-        debug!(no_of_pages = no_of_pages);
+        info!(no_of_pages = no_of_pages);
 
         let films: Vec<Film> = tokio::stream::iter(1..=no_of_pages)
             .map(|i| self.get_movies_from_page(username, i))
             .buffer_unordered(5)
-            .map(|result| result.map(|vec| tokio::stream::iter(vec).map(|item| Result::<_>::Ok(item))))
-            .try_flatten()
-            .try_collect()
+            .try_concat()
             .await?;
 
-        debug!(films_len = films.len());
+        info!(films_len = films.len());
         Ok(films)
     }
 }

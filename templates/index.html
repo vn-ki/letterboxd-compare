@@ -18,6 +18,18 @@
           <p class="subtitle">
           <a class="button is-link" onclick="redirect()">Compare</a>
           </p>
+
+          {# error #}
+          {% if error_mess.is_some() %}
+          <article class="message is-danger">
+            <div class="message-header">
+              <p>Error</p>
+            </div>
+            <div class="message-body">
+              {{ error_mess.unwrap() }}
+            </div>
+          </article>
+          {% endif %}
         </div>
         {# <div class="column"></div> #}
       </div>
