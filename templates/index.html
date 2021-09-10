@@ -1,41 +1,10 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LB Diff</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
-  </head>
-  <body>
-  <section class="section">
-    <div class="container">
-      <div class="columns is-mobile">
-        {# <div class="column"></div> #}
-        <div class="column is-full-mobile is-four-fifths-tablet is-three-quarters-desktop is-two-thirds-widescreen is-two-thirds-fullhd" style="margin: auto">
-          <h1 class="title is-4">
-            Movies that <input id="user1" class="input is-1" placeholder="LB username"></input> has watched, but <input id="user2" class="input is-1" placeholder="LB username"></input> hasn't!
-          </h1>
-          <p class="subtitle">
-          <a class="button is-link" onclick="redirect()">Compare</a>
-          </p>
+{% extends "base.html" %}
 
-          {# error #}
-          {% if error_mess.is_some() %}
-          <article class="message is-danger">
-            <div class="message-header">
-              <p>Error</p>
-            </div>
-            <div class="message-body">
-              {{ error_mess.unwrap() }}
-            </div>
-          </article>
-          {% endif %}
-        </div>
-        {# <div class="column"></div> #}
-      </div>
-    </div>
-  </section>
-  </body>
+{% block title %}Home{% endblock %}
+
+{% block head %}
+  <style>
+  </style>
   <script>
     function redirect() {
           let user1 = document.getElementById('user1').value;
@@ -43,4 +12,25 @@
           window.location = "/" + user1 + "/vs/" + user2;
         }
   </script>
-</html>
+{% endblock %}
+
+{% block content %}
+  <h1 class="title is-4">
+    Movies that <input id="user1" class="input is-1" placeholder="LB username"></input> has watched, but <input id="user2" class="input is-1" placeholder="LB username"></input> hasn't!
+  </h1>
+  <p class="subtitle">
+  <a class="button is-link" onclick="redirect()">Compare</a>
+  </p>
+
+  {# error #}
+  {% if error_mess.is_some() %}
+  <article class="message is-danger">
+    <div class="message-header">
+      <p>Error</p>
+    </div>
+    <div class="message-body">
+      {{ error_mess.unwrap() }}
+    </div>
+  </article>
+  {% endif %}
+{% endblock %}

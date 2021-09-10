@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ title }} - LB Compare{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <div class="column is-full-mobile is-four-fifths-tablet is-three-quarters-desktop is-two-thirds-widescreen is-two-thirds-fullhd" style="margin: auto">
+      {% block content %}{% endblock %}
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
