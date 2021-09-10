@@ -1,10 +1,11 @@
-use anyhow::{anyhow, Result};
 use scraper::{Html, Selector};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 use tracing::{debug, info};
 use futures::{stream, StreamExt};
 use futures::TryStreamExt;
+// use tokio_stream::{self as stream, StreamExt};
 
 
 use thiserror::Error;
@@ -47,7 +48,6 @@ impl std::fmt::Display for Rating {
             5 => "★★½",
             6 => "★★★",
             7 => "★★★½",
-            8 => "★★★★",
             9 => "★★★★½",
             10 => "★★★★★",
             _ => "no rating",
@@ -186,7 +186,7 @@ impl LetterboxdClient {
         }?;
         info!(no_of_pages = no_of_pages);
 
-        let films: Vec<Film> = tokio::stream::iter(1..=no_of_pages)
+        let films: Vec<Film> = stream::iter(1..=no_of_pages)
             .map(|i| self.get_movies_from_page(username, i))
             .buffer_unordered(5)
             .try_concat()
