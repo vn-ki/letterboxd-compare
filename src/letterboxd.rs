@@ -48,9 +48,13 @@ impl std::fmt::Display for Rating {
             5 => "★★½",
             6 => "★★★",
             7 => "★★★½",
+            8 => "★★★★",
             9 => "★★★★½",
             10 => "★★★★★",
-            _ => "no rating",
+            _ => {
+                debug!("got no rating: {}", self.0);
+                "no rating"
+            },
         };
         f.write_fmt(format_args!("{}", star))
     }
