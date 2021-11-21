@@ -7,20 +7,83 @@
   </style>
   <script>
     function redirect() {
-          let user1 = document.getElementById('user1').value;
-          let user2 = document.getElementById('user2').value;
-          window.location = "/" + user1 + "/vs/" + user2;
-        }
+      let user1_elem = document.getElementById('user1');
+      let user2_elem = document.getElementById('user2');
+      let user1_error_elem = document.getElementById('user1-error');
+      let user2_error_elem = document.getElementById('user2-error');
+      let compare_button = document.getElementById('compare-button');
+      let user1_val = user1_elem.value;
+      let user2_val = user2_elem.value;
+      let error = false;
+      let err_message = "Username is not valid. Enter the LB username, not the display name.";
+
+      clear_form_error(user1_error_elem);
+      clear_form_error(user2_error_elem);
+      if (!validate_username(user1_val)) {
+        set_form_error(user1_error_elem, err_message);
+        error = true;
+      } 
+      if (!validate_username(user2_val)) {
+        set_form_error(user2_error_elem, err_message);
+        error = true;
+      }
+      if (error) {
+        return;
+      }
+      // redirect to the compare location
+      compare_button.classList.add("is-loading");
+      window.location = "/" + user1_elem.value + "/vs/" + user2_elem.value;
+    }
+    function validate_username(username) {
+      let username_regex = /^[a-zA-Z0-9_]+$/;
+      if (username.length == 0 || !username.match(username_regex)) {
+        return false;
+      }
+      return true;
+    }
+    function set_form_error(elem, message) {
+      elem.innerHTML = message;
+      elem.style = "display: block";
+    }
+    function clear_form_error(elem) {
+      elem.innerHTML = "";
+      elem.style = "display: none";
+    }
+    window.onload = function() {
+      let form = document.getElementById("input-form");
+      form.onsubmit = function(event) {
+        event.preventDefault();
+        return false;
+      }
+    }
   </script>
 {% endblock %}
 
 {% block content %}
+  <div style="margin-bottom: 2em">
+    <h1 class="title is-2" style="margin-bottom: 0px">
+      Letterboxd Compare
+    </h1>
+    <a href="https://github.com/vn-ki/letterboxd-compare" target="_blank">vn-ki/letterboxd-compare</a>
+  </div>
+  <form id="input-form" onsubmit="redirect()">
   <h1 class="title is-4">
-    Movies that <input id="user1" class="input is-1" placeholder="LB username"></input> has watched, but <input id="user2" class="input is-1" placeholder="LB username"></input> hasn't!
+    Movies that 
+    <p>
+      <input id="user1" class="input is-1" placeholder="LB username"></input>
+      <p id="user1-error" class="help is-danger" style="display: none"></p>
+    </p> 
+    has watched, but 
+    <p>
+      <input id="user2" class="input is-1" placeholder="LB username"></input>
+      <p id="user2-error" class="help is-danger" style="display: none"></p>
+    </p>
+    hasn't!
   </h1>
   <p class="subtitle">
-  <a class="button is-link" onclick="redirect()">Compare</a>
+  <button type="submit" id="compare-button" class="button is-link" onclick="redirect()">Compare</button>
   </p>
+  </form>
 
   {# error #}
   {% if error_mess.is_some() %}
