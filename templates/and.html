@@ -19,17 +19,20 @@
     Letterboxd Compare
   </a>
   <h1 class="title is-4">
-    Movies that <span class="title is-1">{{ user1 }}</span> has watched, but <span class="title is-1">{{ user2 }}</span> hasn't!
+    Movies that both <span class="title is-1">{{ user1 }}</span> and <span class="title is-1">{{ user2 }}</span> has watched sorted by former's rating.
   </h1>
   <p class="subtitle">
-  <a class="button is-link" href="/{{ user2 }}/vs/{{ user1 }}">Invert Comparison</a>
-  <a class="button is-link" href="/{{ user2 }}/and/{{ user1 }}">And comparison</a>
+  <a class="button is-link" href="/{{ user2 }}/and/{{ user1 }}">Invert Comparison</a>
+  <a class="button is-link" href="/{{ user2 }}/vs/{{ user1 }}">Versus comparison</a>
   </p>
   <ul>
-    {% for movie in diff %}
+    {% for (movie, other_rating) in diff %}
     <li>
       <span class="is-size-5"><a href={{ movie.url }}>{{ movie.name }}</a></span>
-      {% if movie.rating.is_some() %} {{ movie.rating.unwrap() }} {% endif %}
+      <span class="is-size-6">
+        {% if movie.rating.is_some() %} {{ movie.rating.unwrap() }} {% endif %} |
+        {% if other_rating.is_some() %} {{ other_rating.unwrap() }} {% endif %}
+      </span>
     </li>
     {% endfor %}
   </ul>

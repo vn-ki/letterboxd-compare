@@ -1,12 +1,12 @@
-use scraper::{Html, Selector};
 use anyhow::{anyhow, Result};
+use core::hash::{Hash, Hasher};
+use futures::TryStreamExt;
+use futures::{stream, StreamExt};
+use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 use tracing::{debug, info};
-use futures::{stream, StreamExt};
-use futures::TryStreamExt;
 // use tokio_stream::{self as stream, StreamExt};
-
 
 use thiserror::Error;
 
@@ -54,7 +54,7 @@ impl std::fmt::Display for Rating {
             _ => {
                 debug!("got no rating: {}", self.0);
                 "no rating"
-            },
+            }
         };
         f.write_fmt(format_args!("{}", star))
     }
@@ -66,7 +66,7 @@ impl From<usize> for Rating {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Eq)]
 pub struct Film {
     pub id: u64,
     pub name: String,
@@ -74,6 +74,21 @@ pub struct Film {
     pub poster: String,
     /// rating is from 0-10
     pub rating: Option<Rating>,
+}
+
+impl Hash for Film {
+    fn hash<H>(&self, h: &mut H)
+    where
+        H: Hasher,
+    {
+        self.id.hash(h)
+    }
+}
+
+impl PartialEq for Film {
+    fn eq(&self, rhs: &Film) -> bool {
+        self.id == rhs.id
+    }
 }
 
 impl LetterboxdClient {
@@ -110,7 +125,10 @@ impl LetterboxdClient {
             None => return Ok(1),
         };
 
-        let no_pages = page.select(&li_sel).last().ok_or(LetterboxdError::PaginationElementNotFound)?;
+        let no_pages = page
+            .select(&li_sel)
+            .last()
+            .ok_or(LetterboxdError::PaginationElementNotFound)?;
         Ok(no_pages.inner_html().parse()?)
     }
 
@@ -170,7 +188,10 @@ impl LetterboxdClient {
         let document = Html::parse_document(&text);
         let selector = Selector::parse("li.poster-container").unwrap();
 
-        document.select(&selector).map(|movie| self.film_from_elem_ref(&movie)).collect()
+        document
+            .select(&selector)
+            .map(|movie| self.film_from_elem_ref(&movie))
+            .collect()
     }
 
     #[tracing::instrument(skip(self))]
