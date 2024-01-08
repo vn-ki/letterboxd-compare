@@ -155,7 +155,7 @@ impl LetterboxdClient {
                 .ok_or(LetterboxdError::HtmlMissingAttr("alt".into()))?
                 .into(),
             url: format!(
-                "https://letterboxd.com{}",
+                "https://letterboxd.com/film/{}",
                 data.attr("data-film-slug")
                     .ok_or(LetterboxdError::HtmlMissingAttr("data-film-slug".into()))?
             ),
