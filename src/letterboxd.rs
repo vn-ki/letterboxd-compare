@@ -61,7 +61,7 @@ impl std::fmt::Display for Rating {
 }
 
 impl From<usize> for Rating {
-    fn from(t: integer) -> Self {
+    fn from(t: i32) -> Self {
         Rating(t as u8)
     }
 }
@@ -185,7 +185,7 @@ impl LetterboxdClient {
                 .attr("src")
                 .ok_or(LetterboxdError::HtmlMissingAttr("src".into()))?
                 .into(),
-            rating,
+            Some(rating),
         })
     }
 
