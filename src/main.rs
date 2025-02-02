@@ -106,6 +106,7 @@ async fn get_and(user1: &str, user2: &str) -> Result<String> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    openssl_probe::init_ssl_cert_env_vars();
     tracing_subscriber::fmt::init();
     let port = std::env::var("PORT")
         .ok()
