@@ -98,6 +98,20 @@ impl LetterboxdClient {
         }
     }
 
+    fn parse_rating2(rating: &str) -> Result<Rating> {
+        if rating.contains("rated-1") {return Ok(1);}
+        if rating.contains("rated-2") {return Ok(2);}
+        if rating.contains("rated-3") {return Ok(3);}
+        if rating.contains("rated-4") {return Ok(4);}
+        if rating.contains("rated-5") {return Ok(5);}
+        if rating.contains("rated-6") {return Ok(6);}
+        if rating.contains("rated-7") {return Ok(7);}
+        if rating.contains("rated-8") {return Ok(8);}
+        if rating.contains("rated-9") {return Ok(9);}
+        if rating.contains("rated-10") {return Ok(10);}
+        return Err(anyhow!("unknown rating: '{}'", rating)),
+    }
+
     fn parse_rating(rating: &str) -> Result<Rating> {
         Ok(match rating {
             "½" => 1,
@@ -140,12 +154,13 @@ impl LetterboxdClient {
         let data = movie.select(&data_selector).next().unwrap().value();
         // poster is inside
         let poster = movie.select(&poster_selector).next().unwrap().value();
-        return Err(anyhow!(" rating field'{}' compared to '{}'", movie.select(&rating_selector).next().unwrap().attr("class"), "★★★★★"));
-        let rating = movie
-            .select(&rating_selector)
-            .next()
-            .map(|r| Self::parse_rating(r.text().next().unwrap()))
-            .transpose()?;
+//        return Err(anyhow!(" rating field'{}' compared to '{}'", movie.select(&rating_selector).next().unwrap().attr("class"), "★★★★★"));
+//        let rating = movie
+//            .select(&rating_selector)
+//            .next()
+//            .map(|r| Self::parse_rating(r.text().next().unwrap()))
+//            .transpose()?;
+        let rating = Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html());
         Ok(Film {
             id: data
                 .attr("data-film-id")
