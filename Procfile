@@ -1,1 +1,1 @@
-web ./target/release/letterboxd-compare
+web /bin/letterboxd-compare
