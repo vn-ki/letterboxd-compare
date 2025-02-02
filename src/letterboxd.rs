@@ -60,7 +60,7 @@ impl std::fmt::Display for Rating {
     }
 }
 
-impl From<usize> for Rating {
+impl From<i32> for Rating {
     fn from(t: i32) -> Self {
         Rating(t as u8)
     }
