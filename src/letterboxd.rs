@@ -98,7 +98,7 @@ impl LetterboxdClient {
         }
     }
 
-    fn parse_rating2(rating: String) -> Result<Rating> {
+    fn parse_rating2(rating: String) -> u8 {
         if rating.contains("rated-1") {return Ok(1);}
         if rating.contains("rated-2") {return Ok(2);}
         if rating.contains("rated-3") {return Ok(3);}
@@ -160,7 +160,7 @@ impl LetterboxdClient {
 //            .next()
 //            .map(|r| Self::parse_rating(r.text().next().unwrap()))
 //            .transpose()?;
-        let rating = Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html()).ok();
+        let rating = Result::From(Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html()).ok());
         Ok(Film {
             id: data
                 .attr("data-film-id")
