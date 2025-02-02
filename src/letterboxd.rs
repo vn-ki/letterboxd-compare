@@ -111,7 +111,7 @@ impl LetterboxdClient {
             "★★★★½" => 9,
             "★★★★★" => 10,
             // TODO: Error here
-            _ => return Err(anyhow!("unknown rating: '{}'", rating)),
+            _ => return Err(anyhow!("unknown rating: '{}' compared to '{}'", rating, "★★★★★")),
         }
         .into())
     }
