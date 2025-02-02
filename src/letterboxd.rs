@@ -99,7 +99,7 @@ impl LetterboxdClient {
     }
 
     fn parse_rating2(rating: String) -> Result<Rating> {
-        if rating.contains("rated-1") {return Rating::from(1 as usize).into();}
+        if rating.contains("rated-1") {return Ok(Rating::from(1 as usize));}
         if rating.contains("rated-2") {return (2 as usize).into();}
         if rating.contains("rated-3") {return (3 as usize).into();}
         if rating.contains("rated-4") {return (4 as usize).into();}
