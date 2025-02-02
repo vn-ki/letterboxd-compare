@@ -98,17 +98,17 @@ impl LetterboxdClient {
         }
     }
 
-    fn parse_rating2(rating: String) -> Result<usize> {
-        if rating.contains("rated-1") {return Ok(1 as usize);}
-        if rating.contains("rated-2") {return Ok(2 as usize);}
-        if rating.contains("rated-3") {return Ok(3 as usize);}
-        if rating.contains("rated-4") {return Ok(4 as usize);}
-        if rating.contains("rated-5") {return Ok(5 as usize);}
-        if rating.contains("rated-6") {return Ok(6 as usize);}
-        if rating.contains("rated-7") {return Ok(7 as usize);}
-        if rating.contains("rated-8") {return Ok(8 as usize);}
-        if rating.contains("rated-9") {return Ok(9 as usize);}
-        if rating.contains("rated-10") {return Ok(10 as usize);}
+    fn parse_rating2(rating: String) -> Result<Rating> {
+        if rating.contains("rated-1") {return 1.into();}
+        if rating.contains("rated-2") {return 2.into();}
+        if rating.contains("rated-3") {return 3.into();}
+        if rating.contains("rated-4") {return 4.into();}
+        if rating.contains("rated-5") {return 5.into();}
+        if rating.contains("rated-6") {return 6.into();}
+        if rating.contains("rated-7") {return 7.into();}
+        if rating.contains("rated-8") {return 8.into();}
+        if rating.contains("rated-9") {return 9.into();}
+        if rating.contains("rated-10") {return 10.into();}
         return Err(anyhow!("unknown rating: '{}'", rating));
     }
 
@@ -160,7 +160,7 @@ impl LetterboxdClient {
 //            .next()
 //            .map(|r| Self::parse_rating(r.text().next().unwrap()))
 //            .transpose()?;
-        let rating = Some(Rating::from(Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html()).ok().unwrap()));
+        let rating = Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html())?;
         Ok(Film {
             id: data
                 .attr("data-film-id")
