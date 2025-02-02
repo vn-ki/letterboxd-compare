@@ -100,15 +100,15 @@ impl LetterboxdClient {
 
     fn parse_rating2(rating: String) -> Result<Rating> {
         if rating.contains("rated-1") {return Ok(Rating::from(1 as usize));}
-        if rating.contains("rated-2") {return (2 as usize).into();}
-        if rating.contains("rated-3") {return (3 as usize).into();}
-        if rating.contains("rated-4") {return (4 as usize).into();}
-        if rating.contains("rated-5") {return (5 as usize).into();}
-        if rating.contains("rated-6") {return (6 as usize).into();}
-        if rating.contains("rated-7") {return (7 as usize).into();}
-        if rating.contains("rated-8") {return (8 as usize).into();}
-        if rating.contains("rated-9") {return (9 as usize).into();}
-        if rating.contains("rated-10") {return (10 as usize).into();}
+        if rating.contains("rated-2") {return Ok(Rating::from(2 as usize));}
+        if rating.contains("rated-3") {return Ok(Rating::from(3 as usize));}
+        if rating.contains("rated-4") {return Ok(Rating::from(4 as usize));}
+        if rating.contains("rated-5") {return Ok(Rating::from(5 as usize));}
+        if rating.contains("rated-6") {return Ok(Rating::from(6 as usize));}
+        if rating.contains("rated-7") {return Ok(Rating::from(7 as usize));}
+        if rating.contains("rated-8") {return Ok(Rating::from(8 as usize));}
+        if rating.contains("rated-9") {return Ok(Rating::from(9 as usize));}
+        if rating.contains("rated-10") {return Ok(Rating::from(10 as usize));}
         return Err(anyhow!("unknown rating: '{}'", rating));
     }
 
