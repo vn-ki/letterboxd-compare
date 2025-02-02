@@ -140,6 +140,7 @@ impl LetterboxdClient {
         let data = movie.select(&data_selector).next().unwrap().value();
         // poster is inside
         let poster = movie.select(&poster_selector).next().unwrap().value();
+        _ => return Err(anyhow!(" rating field'{}' compared to '{}'", movie.select(&rating_selector).next().unwrap(), "★★★★★")),
         let rating = movie
             .select(&rating_selector)
             .next()
