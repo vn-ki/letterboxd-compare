@@ -60,12 +60,6 @@ impl std::fmt::Display for Rating {
     }
 }
 
-impl From<i32> for Rating {
-    fn from(t: i32) -> Self {
-        Rating(t as u8)
-    }
-}
-
 impl From<usize> for Rating {
     fn from(t: usize) -> Self {
         Rating(t as u8)
@@ -105,16 +99,16 @@ impl LetterboxdClient {
     }
 
     fn parse_rating2(rating: String) -> Result<Rating> {
-        if rating.contains("rated-1") {return 1 as usize.into();}
-        if rating.contains("rated-2") {return 2 as usize.into();}
-        if rating.contains("rated-3") {return 3 as usize.into();}
-        if rating.contains("rated-4") {return 4 as usize.into();}
-        if rating.contains("rated-5") {return 5 as usize.into();}
-        if rating.contains("rated-6") {return 6 as usize.into();}
-        if rating.contains("rated-7") {return 7 as usize.into();}
-        if rating.contains("rated-8") {return 8 as usize.into();}
-        if rating.contains("rated-9") {return 9 as usize.into();}
-        if rating.contains("rated-10") {return 10 as usize.into();}
+        if rating.contains("rated-1") {return (1 as usize).into();}
+        if rating.contains("rated-2") {return (2 as usize).into();}
+        if rating.contains("rated-3") {return (3 as usize).into();}
+        if rating.contains("rated-4") {return (4 as usize).into();}
+        if rating.contains("rated-5") {return (5 as usize).into();}
+        if rating.contains("rated-6") {return (6 as usize).into();}
+        if rating.contains("rated-7") {return (7 as usize).into();}
+        if rating.contains("rated-8") {return (8 as usize).into();}
+        if rating.contains("rated-9") {return (9 as usize).into();}
+        if rating.contains("rated-10") {return (10 as usize).into();}
         return Err(anyhow!("unknown rating: '{}'", rating));
     }
 
@@ -166,7 +160,7 @@ impl LetterboxdClient {
 //            .next()
 //            .map(|r| Self::parse_rating(r.text().next().unwrap()))
 //            .transpose()?;
-        let rating = Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html())?;
+        let rating = Some(Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html())?);
         Ok(Film {
             id: data
                 .attr("data-film-id")
@@ -185,7 +179,7 @@ impl LetterboxdClient {
                 .attr("src")
                 .ok_or(LetterboxdError::HtmlMissingAttr("src".into()))?
                 .into(),
-            Some(rating),
+            rating,
         })
     }
 
