@@ -61,6 +61,12 @@ impl std::fmt::Display for Rating {
 }
 
 impl From<usize> for Rating {
+    fn from(t: integer) -> Self {
+        Rating(t as u8)
+    }
+}
+
+impl From<usize> for Rating {
     fn from(t: usize) -> Self {
         Rating(t as u8)
     }
