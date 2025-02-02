@@ -164,7 +164,7 @@ impl LetterboxdClient {
         let rating = movie
             .select(&rating_selector)
             .next()
-            .map(|r| Self::parse_rating(r.html()))
+            .map(|r| Self::parse_rating2(r.html()))
             .transpose()?;
         Ok(Film {
             id: data
