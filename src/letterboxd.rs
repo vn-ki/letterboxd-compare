@@ -98,7 +98,7 @@ impl LetterboxdClient {
         }
     }
 
-    fn parse_rating2(rating: String) -> Result<Rating> {
+    fn parse_rating(rating: &str) -> Result<Rating> {
         if rating.contains("rated-1") {return Ok(Rating::from(1 as usize));}
         if rating.contains("rated-2") {return Ok(Rating::from(2 as usize));}
         if rating.contains("rated-3") {return Ok(Rating::from(3 as usize));}
@@ -110,24 +110,6 @@ impl LetterboxdClient {
         if rating.contains("rated-9") {return Ok(Rating::from(9 as usize));}
         if rating.contains("rated-10") {return Ok(Rating::from(10 as usize));}
         return Err(anyhow!("unknown rating: '{}'", rating));
-    }
-
-    fn parse_rating(rating: &str) -> Result<Rating> {
-        Ok(match rating {
-            "½" => 1,
-            "★" => 2,
-            "★½" => 3,
-            "★★" => 4,
-            "★★½" => 5,
-            "★★★" => 6,
-            "★★★½" => 7,
-            "★★★★" => 8,
-            "★★★★½" => 9,
-            "★★★★★" => 10,
-            // TODO: Error here
-            _ => return Err(anyhow!("unknown rating: '{}' compared to '{}'", rating, "★★★★★")),
-        }
-        .into())
     }
 
     fn get_pages(&self, html: &Html) -> std::result::Result<usize, LetterboxdError> {
@@ -154,17 +136,10 @@ impl LetterboxdClient {
         let data = movie.select(&data_selector).next().unwrap().value();
         // poster is inside
         let poster = movie.select(&poster_selector).next().unwrap().value();
-//        return Err(anyhow!(" rating field'{}' compared to '{}'", movie.select(&rating_selector).next().unwrap().attr("class"), "★★★★★"));
-//        let rating = movie
-//            .select(&rating_selector)
-//            .next()
-//            .map(|r| Self::parse_rating(r.text().next().unwrap()))
-//            .transpose()?;
-//        let rating = Some(Self::parse_rating2(movie.select(&rating_selector).next().unwrap().html())?);
         let rating = movie
             .select(&rating_selector)
             .next()
-            .map(|r| Self::parse_rating2(r.html()))
+            .map(|r| Self::parse_rating(r.html()))
             .transpose()?;
         Ok(Film {
             id: data
