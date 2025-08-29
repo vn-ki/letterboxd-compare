@@ -1,1 +1,1 @@
-web ./bin/letterboxd-compare
+web: ./bin/letterboxd-compare

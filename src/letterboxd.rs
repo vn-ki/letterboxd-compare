@@ -6,6 +6,7 @@ use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 use tracing::{debug, info};
+use std::io::{self, Write};
 // use tokio_stream::{self as stream, StreamExt};
 
 use thiserror::Error;
@@ -52,7 +53,7 @@ impl std::fmt::Display for Rating {
             9 => "★★★★½",
             10 => "★★★★★",
             _ => {
-                debug!("got no rating: {}", self.0);
+                println!("got no rating: {}", self.0);
                 "no rating"
             }
         };
@@ -129,10 +130,10 @@ impl LetterboxdClient {
     }
 
     fn film_from_elem_ref(&self, movie: &scraper::ElementRef) -> Result<Film> {
-        let data_selector = Selector::parse("div.film-poster").unwrap();
+        let data_selector = Selector::parse("div.react-component").unwrap();
         let poster_selector = Selector::parse("img").unwrap();
         let rating_selector = Selector::parse("span.rating").unwrap();
-
+        
         let data = movie.select(&data_selector).next().unwrap().value();
         // poster is inside
         let poster = movie.select(&poster_selector).next().unwrap().value();
@@ -152,8 +153,8 @@ impl LetterboxdClient {
                 .into(),
             url: format!(
                 "https://letterboxd.com/film/{}",
-                data.attr("data-film-slug")
-                    .ok_or(LetterboxdError::HtmlMissingAttr("data-film-slug".into()))?
+                data.attr("data-item-slug")
+                    .ok_or(LetterboxdError::HtmlMissingAttr("data-item-slug".into()))?
             ),
             poster: poster
                 .attr("src")
@@ -170,7 +171,7 @@ impl LetterboxdClient {
         page: usize,
     ) -> Result<reqwest::Response> {
         let url = format!("https://letterboxd.com/{}/films/page/{}", username, page);
-        debug!("fetching url={}", url);
+        println!("fetching url={}", url);
         let text = self.client.get(&url).send().await?;
         Ok(text)
     }
@@ -181,8 +182,9 @@ impl LetterboxdClient {
             .await?
             .text()
             .await?;
+        //println!("{}", text);
         let document = Html::parse_document(&text);
-        let selector = Selector::parse("li.poster-container").unwrap();
+        let selector = Selector::parse("li.griditem").unwrap();
 
         document
             .select(&selector)
@@ -196,6 +198,7 @@ impl LetterboxdClient {
         // let document = Html::parse_document(&text);
         // let no_of_pages = self.get_pages(&document)?;
         // TODO: this is weird async problem
+
         let no_of_pages = {
             let resp = self.get_letterboxd_film_by_page(username, 1).await?;
             if resp.status() == reqwest::StatusCode::NOT_FOUND {
@@ -205,7 +208,7 @@ impl LetterboxdClient {
             let document = Html::parse_document(&text);
             self.get_pages(&document)
         }?;
-        info!(no_of_pages = no_of_pages);
+        //println!(no_of_pages = no_of_pages);
 
         let films: Vec<Film> = stream::iter(1..=no_of_pages)
             .map(|i| self.get_movies_from_page(username, i))
@@ -213,7 +216,7 @@ impl LetterboxdClient {
             .try_concat()
             .await?;
 
-        info!(films_len = films.len());
+        //println!(films_len = films.len());
         Ok(films)
     }
 }
