@@ -133,7 +133,7 @@ impl LetterboxdClient {
     }
 
     fn film_from_elem_ref(&self, movie: &scraper::ElementRef) -> Result<Film> {
-        let data_selector = Selector::parse("div.film-poster").unwrap();
+        let data_selector = Selector::parse("div.react-component").unwrap();
         let poster_selector = Selector::parse("img").unwrap();
         let rating_selector = Selector::parse("span.rating").unwrap();
 
@@ -156,8 +156,8 @@ impl LetterboxdClient {
                 .into(),
             url: format!(
                 "https://letterboxd.com/film/{}",
-                data.attr("data-film-slug")
-                    .ok_or(LetterboxdError::HtmlMissingAttr("data-film-slug".into()))?
+                data.attr("data-item-slug")
+                    .ok_or(LetterboxdError::HtmlMissingAttr("data-item-slug".into()))?
             ),
             poster: poster
                 .attr("src")
@@ -186,7 +186,7 @@ impl LetterboxdClient {
             .text()
             .await?;
         let document = Html::parse_document(&text);
-        let selector = Selector::parse("li.poster-container").unwrap();
+        let selector = Selector::parse("li.griditem").unwrap();
 
         document
             .select(&selector)
