@@ -1,4 +1,3 @@
-#![feature(async_closure)]
 #[macro_use]
 extern crate lazy_static;
 
@@ -10,7 +9,6 @@ use crate::letterboxd::*;
 use anyhow::Result;
 use askama::Template;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::collections::HashSet;
 use tokio::try_join;
 use tracing::{debug, info};
@@ -46,7 +44,7 @@ lazy_static! {
 
 async fn cached_get_movies(username: &str) -> Result<Vec<Film>> {
     if let Some(s) = CACHE.get(username)? {
-        info!("cache hit for {}", username);
+        println!("cache hit for {}", username);
         let ret: Vec<Film> = serde_json::from_str(&s)?;
         return Ok(ret);
     }
@@ -56,7 +54,7 @@ async fn cached_get_movies(username: &str) -> Result<Vec<Film>> {
 }
 
 async fn get_diff(user1: &str, user2: &str) -> Result<String> {
-    info!("get_diff({}, {})", user1, user2);
+    println!("get_diff({}, {})", user1, user2);
     let (movies1, movies2) = try_join!(cached_get_movies(user1), cached_get_movies(user2))?;
 
     let watched_by_2: HashSet<_> = movies2.into_iter().map(|x| x.id).collect();
@@ -78,7 +76,7 @@ async fn get_diff(user1: &str, user2: &str) -> Result<String> {
 }
 
 async fn get_and(user1: &str, user2: &str) -> Result<String> {
-    info!("get_and({}, {})", user1, user2);
+    println!("get_and({}, {})", user1, user2);
     let (movies1, movies2) = try_join!(cached_get_movies(user1), cached_get_movies(user2))?;
 
     let watched_by_2: HashSet<_> = movies2.into_iter().collect();

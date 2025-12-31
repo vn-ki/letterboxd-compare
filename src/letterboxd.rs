@@ -6,6 +6,7 @@ use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::fmt::Formatter;
 use tracing::{debug, info};
+use std::io::{self, Write};
 // use tokio_stream::{self as stream, StreamExt};
 
 use thiserror::Error;
@@ -52,7 +53,7 @@ impl std::fmt::Display for Rating {
             9 => "★★★★½",
             10 => "★★★★★",
             _ => {
-                debug!("got no rating: {}", self.0);
+                println!("got no rating: {}", self.0);
                 "no rating"
             }
         };
@@ -98,22 +99,18 @@ impl LetterboxdClient {
         }
     }
 
-    fn parse_rating(rating: &str) -> Result<Rating> {
-        Ok(match rating {
-            "½" => 1,
-            "★" => 2,
-            "★½" => 3,
-            "★★" => 4,
-            "★★½" => 5,
-            "★★★" => 6,
-            "★★★½" => 7,
-            "★★★★" => 8,
-            "★★★★½" => 9,
-            "★★★★★" => 10,
-            // TODO: Error here
-            _ => return Err(anyhow!("unknown rating: '{}'", rating)),
-        }
-        .into())
+    fn parse_rating(rating: String) -> Result<Rating> {
+        if rating.contains("rated-1") {return Ok(Rating::from(1 as usize));}
+        if rating.contains("rated-2") {return Ok(Rating::from(2 as usize));}
+        if rating.contains("rated-3") {return Ok(Rating::from(3 as usize));}
+        if rating.contains("rated-4") {return Ok(Rating::from(4 as usize));}
+        if rating.contains("rated-5") {return Ok(Rating::from(5 as usize));}
+        if rating.contains("rated-6") {return Ok(Rating::from(6 as usize));}
+        if rating.contains("rated-7") {return Ok(Rating::from(7 as usize));}
+        if rating.contains("rated-8") {return Ok(Rating::from(8 as usize));}
+        if rating.contains("rated-9") {return Ok(Rating::from(9 as usize));}
+        if rating.contains("rated-10") {return Ok(Rating::from(10 as usize));}
+        return Err(anyhow!("unknown rating: '{}'", rating));
     }
 
     fn get_pages(&self, html: &Html) -> std::result::Result<usize, LetterboxdError> {
@@ -136,14 +133,14 @@ impl LetterboxdClient {
         let data_selector = Selector::parse("div.react-component").unwrap();
         let poster_selector = Selector::parse("img").unwrap();
         let rating_selector = Selector::parse("span.rating").unwrap();
-
+        
         let data = movie.select(&data_selector).next().unwrap().value();
         // poster is inside
         let poster = movie.select(&poster_selector).next().unwrap().value();
         let rating = movie
             .select(&rating_selector)
             .next()
-            .map(|r| Self::parse_rating(r.text().next().unwrap()))
+            .map(|r| Self::parse_rating(r.html()))
             .transpose()?;
         Ok(Film {
             id: data
@@ -174,7 +171,7 @@ impl LetterboxdClient {
         page: usize,
     ) -> Result<reqwest::Response> {
         let url = format!("https://letterboxd.com/{}/films/page/{}", username, page);
-        debug!("fetching url={}", url);
+        println!("fetching url={}", url);
         let text = self.client.get(&url).send().await?;
         Ok(text)
     }
@@ -185,6 +182,7 @@ impl LetterboxdClient {
             .await?
             .text()
             .await?;
+        //println!("{}", text);
         let document = Html::parse_document(&text);
         let selector = Selector::parse("li.griditem").unwrap();
 
@@ -200,6 +198,7 @@ impl LetterboxdClient {
         // let document = Html::parse_document(&text);
         // let no_of_pages = self.get_pages(&document)?;
         // TODO: this is weird async problem
+
         let no_of_pages = {
             let resp = self.get_letterboxd_film_by_page(username, 1).await?;
             if resp.status() == reqwest::StatusCode::NOT_FOUND {
@@ -209,7 +208,7 @@ impl LetterboxdClient {
             let document = Html::parse_document(&text);
             self.get_pages(&document)
         }?;
-        info!(no_of_pages = no_of_pages);
+        //println!(no_of_pages = no_of_pages);
 
         let films: Vec<Film> = stream::iter(1..=no_of_pages)
             .map(|i| self.get_movies_from_page(username, i))
@@ -217,7 +216,7 @@ impl LetterboxdClient {
             .try_concat()
             .await?;
 
-        info!(films_len = films.len());
+        //println!(films_len = films.len());
         Ok(films)
     }
 }
